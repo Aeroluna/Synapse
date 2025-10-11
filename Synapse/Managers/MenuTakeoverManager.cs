@@ -32,7 +32,7 @@ internal class MenuTakeoverManager : IDisposable, ITickable
     private readonly GameObject[] _menuLogo;
 
     private BundleInfo? _bundleInfo;
-    private uint _lastHash;
+    private uint? _lastHash;
     private GameObject? _prefab;
     private bool _enabled;
 

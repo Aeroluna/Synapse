@@ -37,7 +37,7 @@ internal static class MediaExtensions
             .ToString(md5.ComputeHash(stream))
             .Replace("-", string.Empty)
             .ToLowerInvariant();
-        if (computed != hash)
+        if (computed != hash && !Plugin.SkipHash)
         {
             throw new InvalidOperationException($"MD5 mismatch, expected: [{hash}], calculated: [{computed}].");
         }
@@ -111,7 +111,9 @@ internal static class MediaExtensions
     internal static async Task<AssetBundle?> LoadFromFileAsync(string path, uint crc)
     {
         TaskCompletionSource<AssetBundle?> taskCompletionSource = new();
-        AssetBundleCreateRequest bundleRequest = AssetBundle.LoadFromFileAsync(path, crc);
+        AssetBundleCreateRequest bundleRequest = Plugin.SkipHash
+            ? AssetBundle.LoadFromFileAsync(path)
+            : AssetBundle.LoadFromFileAsync(path, crc);
         bundleRequest.completed += _ => { taskCompletionSource.SetResult(bundleRequest.assetBundle); };
 
         return await taskCompletionSource.Task;

@@ -116,7 +116,7 @@ internal class ListingManager : IInitializable
     {
         try
         {
-            string url = _config.Url;
+            string url = Plugin.ListingOverride ?? _config.Url;
             _log.Debug($"Checking [{url}] for active listing");
             UnityWebRequest www = UnityWebRequest.Get(url);
             await www.SendAndVerify(token);
