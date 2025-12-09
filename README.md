@@ -18,15 +18,26 @@ Participants compete against each other on a shared leaderboard and can communic
 ## Setup for event hosts
 #### Interested in running an event using Synapse? Contact me and I can help config and list your event using the official API.
 
-By default, Synapse will check `https://synapse.totalbs.dev/api/v1/directory` for an active listing.
-This can be changed by going to `UserData/Synapse.json` and editing the URL to point to your own API.
+### Setup docker
+If you havent already install docker from https://www.docker.com/ on a server with a web adress or HTTPS: ip.
 
-The backend for Synapse is made up of two projects, the listing and the server.
-- The listing is a simple API that the client mod will ping everytime the game is started. It contains necessary information such where to connect to the server, when the event starts, and any required assets needed to join.
-- The server is what the clients actually connect to. It runs the entire event.
+Create the following folder format 
+```txt
+synapse/
+ ├─ listing/
+ │   ├─ wwwroot/
+ │   └─ appsettings.Production.json
+ └─ server/
+     ├─ config/
+     └─ appsettings.Production.json
+docker-compose.yml
+```
 
-The recommended way to run the server is using docker.
-Example `docker-compose.yml`:
+In your docker-compose.yml you will configure your docker instulation. 
+The way to do this is by creating 2 services, Synapse listener and Synapse Server
+
+Here is a example config for docker.
+
 ```yml
 services:
   synapse-listing:
@@ -53,131 +64,80 @@ services:
       - ./synapse/server/config:/config
     ports:
       - 1001:1001
-    stdin_open: true 
+    stdin_open: true
     tty: true
 ```
 
-The configuration is done using two `appsettings.ENVIRONMENT.json` for the listing and server. This will typically be `appsettings.Production.json`. Example configs can be found at `Synapse.Listing/appsettings.json.sample` and `Synapse.Server/appsettings.json.sample`
+Next up your gonna want to setup your settings files. Create 2 files in your /listening and /server directory named ```appsettings.Production.json```
 
-Although assets can be hosted from `wwwroot/` using the Listing project, it is recommended to use a CDN. Example assets can be found in the `SampleAssets` directory.
+Each of those files will contain different information. For the listening server you will create your "Event" Instulation. That includes a name date ip and all of that.
 
-Listing appsettings:
-```json5
+Example of listening appsettings
+
+```json
 {
   "Listing": {
-    "Title": "Extra Sensory II", // Name shown to players
-    "Time": "2025-01-26T22:00:00Z", // UTC time to start the event
-    "IpAddress": "127.0.0.1:1001", // IP address of the server. Clients should be able to connect to this. IP:PORT
-    "BannerImage": "http://localhost:5033/images/banner.png", // Banner image shown in menu 200x500.
-    "BannerColor": "#341552", // Hex code of banner in main menu
-    "GameVersion": "1.29.1,1.34.2,1.37.1,1.39.1,1.40.0", // Game versions that can connect. Comma separated exact versions
-    "Divisions": [ // Divisions for event. If empty, no divisions will be used.
-      {
-        "Name": "Casual",
-        "Description": "For those looking to enjoy the game at a more casual pace, However, you may still find later maps challenging. Notes per second is lower, but note gimmicks are unaffected."
-      },
-      {
-        "Name": "Experienced",
-        "Description": "Experience the maps as they were originally intended. Higher notes per second for those looking to put their skills to the test"
-      }
-    ],
-    "Takeover": { // Main menu takeover during lead up to event
-      "DisableDust": true, // Disables global dust when true
-      "DisableLogo": true, // Disables default logo when true
-      "CountdownTMP": "Logo/EXSII_COUNTDOWN", // Path to TextMeshPro to update with countdown
-      "Bundles": [
-        {
-          "GameVersion": "1.29.1", // Comma separated game versions that use this bundle
-          "Url": "https://localhost:5033/bundle/takeover_windows2019_3913474686",
-          "Hash": 3913474686 // CRC hash of bundle. Bundle will not load if this is wrong
-        },
-        {
-          "GameVersion": "1.34.2,1.37.1,1.39.1,1.40.0",
-          "Url": "https://localhost:5033/bundle/takeover_windows2021_2910218729",
-          "Hash": 2910218729
-        }
-      ]
-    },
-    "Lobby": {
-      "DisableDust": true, // Disables global dust when true
-      "DisableSmoke": true, // Disables global smoke when true
-      "DepthTextureMode": 1, // Bitmask to force camera depth texture mode. https://docs.unity3d.com/ScriptReference/DepthTextureMode.html
-      "Bundles": [
-        {
-          "GameVersion": "1.29.1",
-          "Url": "https://localhost:5033/bundle/bundle_windows2019_853015874",
-          "Hash": 853015874
-        },
-        {
-          "GameVersion": "1.34.2,1.37.1,1.39.1,1.40.0",
-          "Url": "https://localhost:5033/bundle/bundle_windows2021_1876858522",
-          "Hash": 1876858522
-        }
-      ]
-    },
-    "RequiredMods": [ // Mods that will be downloaded when trying to join event. These will also be downloaded an hour early. Be sure to include all mod dependencies as well
-      {
-        "GameVersion": "1.29.1",
-        "Mods": [
-          {
-            "Id": "Vivify",
-            "Version": "^1.0.1", // Version range to check for. If player's version does not match, will try to install
-            "Url": "https://localhost:5033/mods/Vivify-1.0.1%2B1.29.1-bs1.29.1-d32ee3d.zip",
-            "Hash": "2e3250b635f5d8c5711ba8d7fd996b4a" // MD5 hash of zip
-          }
-        ]
-      }
-    ]
+    "Title": "Local Test Event",
+    "Time": "2025-12-09T00:00:00Z",
+    "IpAddress": "192.168.40.185:1001",
+    "BannerImage": "",
+    "BannerColor": "#341552",
+    "GameVersion": "1.40.8",
+    "Divisions": []
   }
 }
 ```
-Server appsettings:
-```json5
+
+Divisions are used to create 2 catagories but thats not fully needed configured.
+
+Next step is to configure your server config. This one will store all map locations, Every banner or image and store the admin ID's
+
+Example
+```json
 {
-  "Port": 1001, // Port to listen on
-  "Listing": "http://synapse-listing:1000/api/v1/directory", // URL of the listing
-  "MaxPlayers": -1, // Max players allowed to connect. Set to -1 for infinite
-  "Directory": "/config", // Where to save persistent files such as scores/logs
+  "Port": 1001, 
+  "Listing": "http://synapse-listing:1000/api/v1/directory", 
+  "Directory": "/config", 
   "Auth": {
-    "Test": { // Used by TestClient
+    "Test": { 
       "Enabled": false
     },
     "Steam": {
       "Enabled": true,
-      "APIKey": "" // Generate an API key at https://steamcommunity.com/dev
+      "APIKey": "000000000" 
     },
     "Oculus": {
       "Enabled": true
     }
   },
   "Event": {
-    "Title": "Extra Sensory II", // Name used for logs
-    "Format": "Showcase", // Currently supported: [None, Showcase]
-    "Intro": { // Event goes through three stages, Intro, Play, and Finish
-      "Motd": "<color=#ff6464><size=120%><mspace=0.6em>//// <b><color=#ffffff>CONNECTION ESTABLISHED</color></b> ////", // MOTDs are displayed when moving between maps/stages and when joining
-      "Intermission": "00:05:00", // Wait period before starting the intro
-      "Duration": "00:01:00", // Duration of intro until changing stages
-      "Url": "http://localhost:5033/images/intro.png" // Image shown while waiting for intro. 400x700
+    "Title": "Local Test Event", 
+    "Format": "None",
+    "Intro": { 
+      "Motd": "<color=#ff6464><size=120%><mspace=0.6em>//// <b><color=#ffffff>CONNECTION ESTABLISHED</color></b> ////", 
+      "Intermission": "00:05:00",
+      "Duration": "00:01:00", 
+      "Url": "http://localhost:5033/images/intro.png"
     },
     "Finish": {
       "Motd": "<color=#ff6464><size=120%><mspace=0.6em>//// <b><color=#ffffff>CONNECTION TERMINATED</color></b> ////<br><color=#ffffff>YOUR COOPERATION IS APPRECIATED",
-      "Url": "http://localhost:5033/images/finish.png" // Image shown after outro. 400x700
+      "Url": "http://localhost:5033/images/finish.png"
     },
     "Maps": [
       {
-        "Name": "Breezer", // Name shown on the leaderboard
-        "AltCoverUrl": "https://localhost:5033/maps/alternative_breezer.png", // Alternative cover to show. Setting this will show "???" before playing the song
+        "Name": "Breezer", 
+        "AltCoverUrl": "https://localhost:5033/maps/alternative_breezer.png", 
         "Motd": "<size=120%><#FFFFFF>[<#FF2121><b>ERROR</b><#FFFFFF> @ <#3171E8>02:18:23<#FFFFFF> | Vivify] Map file <#45B543>'breezer.zip'<#FFFFFF> has been breached by unknown source",
-        "Intermission": "00:10:00", // Wait period before map start
-        "Duration": "00:10:00", // Duration of song before changing maps. Should be more than the map's duration to make sure scores can be submitted before ending
+        "Intermission": "00:10:00", 
+        "Duration": "00:10:00",
         "Ruleset": {
-          "AllowResubmission": true, // Allows players to retry for a better score
-          "Modifiers": ["noEnergy"] // Modifiers to use. Synapse adds the "noEnergy" modifier, a special modifier where the energy bar is disabled
+          "AllowResubmission": true, 
+          "Modifiers": ["noEnergy"] 
         },
-        "Keys": [ // Should be a key for every division. This tells the game which difficulty to use
+        "Keys": [
           {
             "Characteristic": "Standard",
-            "Difficulty": 1 // 0 = Easy, 1 = Normal, 2 = Hard, 3 = Expert, 4 = Expert+
+            "Difficulty": 1 
           },
           {
             "Characteristic": "Standard",
@@ -186,9 +146,9 @@ Server appsettings:
         ],
         "Downloads": [
           {
-            "GameVersion": "1.29.1", // Comma separated game versions
+            "GameVersion": "1.29.1", 
             "Url": "https://localhost:5033/maps/Breezer_2019_3d3304c.zip",
-            "Hash": "3d3304c27e4cd48cb0f9da768ce833a2" // MD5 hash of zip file
+            "Hash": "3d3304c27e4cd48cb0f9da768ce833a2" 
           },
           {
             "GameVersion": "1.34.2,1.37.1,1.39.1,1.40.0",
@@ -201,43 +161,56 @@ Server appsettings:
   }
 }
 ```
+If you read through that you would notice there is a section called "Steam API key" Steam has a thing where when a user joins this is used to check if there a admin. You can create a API webook key here https://steamcommunity.com/dev/apikey
+Just paste in the key and it will work
 
-## Commands
-Roles can grant the following permissions:
-- 1 = Coordinator: Can control the flow of the event, i.e. start/stop maps manually, change motd, etc.
-- 2 = Moderator: Can moderate other users, i.e. ban or kick users
-- 4 = NoQualify: Users with this permission are unable to qualify
-Example `roles.json`:
-```json5
+Once thats all configured. We have 1 more thing to do and thats setup your admin users. This is the easiest step
+
+Go to your server and into your config. Your gonna create 2 files. Admin.json and roles.json
+This stores your admin roles and who is admin
+
+
+## Admins.json
+
+```json
+[
+  {
+    "roles": ["coordinator"],
+    "id": "USERID_Steam",
+    "username": "ADMIN USERS STEAM NAME"
+  }
+]
+```
+
+## Roles.json
+
+```json
 [
   {
     "name": "coordinator",
-    "priority": 99, // Can only affect users with a lower priority than themselves
-    "color": "red", // Username color in chat. See https://digitalnativestudios.com/textmeshpro/docs/rich-text/#color. Will use role with highest priority
-    "permission": 1 // Bitmask of permissions
-  }
-]
-```
-Example `admins.json`:
-```json5
-[
+    "priority": 99,
+    "color": "red",
+    "permission": 1
+  },
   {
-    "roles": [
-      "moderator",
-      "mapper",
-      "coordinator"
-    ],
-    "id": "76561198301904113_Steam",
-    "username": "Aeroluna"
+    "name": "moderator",
+    "priority": 50,
+    "color": "yellow",
+    "permission": 2
+  },
+  {
+    "name": "noqualify",
+    "priority": 10,
+    "color": "gray",
+    "permission": 4
   }
 ]
 ```
-All users that connect will be given an ID in the following format: `PLATFORMID_PLATFORM`, e.g. `76561172306506184_Steam` or `2026218196532328_OculusRift`.
 
-Commands be sent through the server, or from a client with appropriate permissions by beginning a chat message with `/`, e.g. `/say hello!`
 
-Commands which need an ID/username can use the start of a name instead. i.e. `kick aero` will find the user `Aeroluna`.
-Commands that use options can be combined, i.e. `-e -f` is the same as `-ef`.
+once that is all configured start the docker container by navigating to your directory in powershell for windows or in cmdline in linux and run `docker compose up -d`
+Then run `docker logs synapse server` to make sure it all booted correctly. Enjoy!
+
 
 Nested lists represent subcommands, e.g. `scores backup reload`.
 ### Client
