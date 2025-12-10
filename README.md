@@ -16,7 +16,7 @@ Participants compete against each other on a shared leaderboard and can communic
 - Seamlessly runs, even with 1900+ players, as shown during EXSII.
 
 ## Setup for event hosts
-#### Interested in running an event using Synapse? Contact me and I can help config and list your event using the official API.
+#### Interested in running an event using Synapse? Contact Aeroluna on discord or email and I can help config and list your event using the official API.
 
 ### Setup docker
 If you havent already install docker from https://www.docker.com/ on a server with a web adress or HTTPS: ip.
@@ -67,6 +67,9 @@ services:
     stdin_open: true
     tty: true
 ```
+The configuration is done using two appsettings.ENVIRONMENT.json for the listing and server. This will typically be appsettings.Production.json. Example configs can be found at Synapse.Listing/appsettings.json.sample and Synapse.Server/appsettings.json.sample
+
+Although assets can be hosted from wwwroot/ using the Listing project, it is recommended to use a CDN. Example assets can be found in the SampleAssets directory.
 
 Next up your gonna want to setup your settings files. Create 2 files in your /listening and /server directory named ```appsettings.Production.json```
 
