@@ -87,7 +87,7 @@ public class BackupService : IBackupService
                     }
 
                     using StreamReader reader = new(file);
-                    Backup backup = await JsonSerializer.DeserializeAsync<Backup>(reader.BaseStream, JsonUtils.Settings);
+                    Backup backup = await JsonSerializer.DeserializeAsync<Backup>(reader.BaseStream, JsonService.Settings);
                     _log.LogInformation("Loaded score backup [{File}]", Path.GetFileName(file));
                     divisionBackups[i] = backup;
                 }
@@ -130,12 +130,12 @@ public class BackupService : IBackupService
             }
 
             await using StreamWriter output = new(path);
-            await JsonSerializer.SerializeAsync(output.BaseStream, backup, JsonUtils.PrettySettings);
+            await JsonSerializer.SerializeAsync(output.BaseStream, backup, JsonService.PrettySettings);
             ////_log.LogInformation("Created backup {File}", path);
         }
         catch (Exception e)
         {
-            _log.LogError(e, "Exception while saving backup");
+            _log.LogCritical(e, "Exception while saving backup");
         }
 
         _saving.Remove(path);

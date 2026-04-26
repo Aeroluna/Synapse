@@ -88,7 +88,7 @@ public class TournamentService : ITournamentService
                 }
                 catch (Exception e)
                 {
-                    Console.WriteLine(e);
+                    _log.LogCritical(e, "Exception while broadcasting tournament message");
                 }
             }
 #pragma warning restore CA2254

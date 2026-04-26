@@ -33,7 +33,12 @@ public interface IListenerService
 
     public void Blacklist(IClient client, string? reason, DateTime? banTime);
 
-    public void BroadcastChatMessage(string id, string username, string? color, MessageType messageType, string message);
+    public void BroadcastChatMessage(
+        string id,
+        string username,
+        string? color,
+        MessageType messageType,
+        string message);
 
     public void BroadcastPriorityServerMessage([StructuredMessageTemplate] string message, params object?[] args);
 
@@ -50,6 +55,7 @@ public class ListenerService : IListenerService
 {
     private readonly IBlacklistService _blacklistService;
     private readonly ILogger<ListenerService> _log;
+    private readonly ITimeoutService _timeoutService;
 
     private readonly AsyncTcpListener _listener;
     private readonly int _maxPlayers;
@@ -59,11 +65,13 @@ public class ListenerService : IListenerService
     public ListenerService(
         ILogger<ListenerService> log,
         IConfiguration config,
+        ITimeoutService timeoutService,
         IServiceProvider provider,
         IBlacklistService blacklistService,
         IClient serverClient)
     {
         _log = log;
+        _timeoutService = timeoutService;
         _provider = provider;
         _blacklistService = blacklistService;
         _serverClient = serverClient;
@@ -340,7 +348,7 @@ public class ListenerService : IListenerService
 
     private void BroadcastPlayerCount()
     {
-        RateLimiter.Timeout(
+        _timeoutService.Timeout(
             () =>
             {
                 using PacketBuilder packetBuilder = new((byte)ClientOpcode.PlayerCount);
@@ -348,6 +356,7 @@ public class ListenerService : IListenerService
                 packetBuilder.Write((ushort)Clients.Count);
                 ReadOnlySequence<byte> bytes = packetBuilder.ToBytes();
                 AllClients(n => n.Send(bytes));
-            }, 4000);
+            },
+            4000);
     }
 }

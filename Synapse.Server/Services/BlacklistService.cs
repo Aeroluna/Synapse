@@ -34,11 +34,16 @@ public interface IBlacklistService
 
 public class BlacklistService : IBlacklistService
 {
+    private readonly ILogger<BlacklistService> _log;
+    private readonly ITimeoutService _timeoutService;
+    private readonly IJsonService _jsonService;
+
     private readonly string _bannedIpsPath;
 
     private readonly string _blacklistPath;
-    private readonly ILogger<BlacklistService> _log;
+
     private readonly string _whitelistPath;
+
     private ConcurrentDictionary<string, byte> _bannedIps = new(); // wouldve preferred ConcurrentHashset
 
     private ConcurrentDictionary<string, SerializedBannedUser> _blacklist = new();
@@ -46,9 +51,13 @@ public class BlacklistService : IBlacklistService
 
     public BlacklistService(
         ILogger<BlacklistService> log,
+        ITimeoutService timeoutService,
+        IJsonService jsonService,
         IDirectoryService directoryService)
     {
         _log = log;
+        _timeoutService = timeoutService;
+        _jsonService = jsonService;
         string currentDirectory = directoryService.ActiveDirectory;
         _blacklistPath = Path.Combine(currentDirectory, "blacklist.json");
         _whitelistPath = Path.Combine(currentDirectory, "whitelist.json");
@@ -108,8 +117,7 @@ public class BlacklistService : IBlacklistService
     public async Task LoadBannedIps(bool verbatim)
     {
         ConcurrentDictionary<string, byte>? ips =
-            await JsonUtils.LoadJson<List<string>, ConcurrentDictionary<string, byte>>(
-                _log,
+            await _jsonService.LoadJson<List<string>, ConcurrentDictionary<string, byte>>(
                 _bannedIpsPath,
                 n => new ConcurrentDictionary<string, byte>(n.ToDictionary(j => j, _ => (byte)0)),
                 verbatim);
@@ -124,8 +132,7 @@ public class BlacklistService : IBlacklistService
     public async Task LoadBlacklist(bool verbatim)
     {
         ConcurrentDictionary<string, SerializedBannedUser>? users =
-            await JsonUtils.LoadJson<List<SerializedBannedUser>, ConcurrentDictionary<string, SerializedBannedUser>>(
-                _log,
+            await _jsonService.LoadJson<List<SerializedBannedUser>, ConcurrentDictionary<string, SerializedBannedUser>>(
                 _blacklistPath,
                 n => new ConcurrentDictionary<string, SerializedBannedUser>(n.ToDictionary(j => j.Id, j => j)),
                 verbatim);
@@ -140,8 +147,7 @@ public class BlacklistService : IBlacklistService
     public async Task LoadWhitelist(bool verbatim)
     {
         ConcurrentDictionary<string, SerializedUser>? users =
-            await JsonUtils.LoadJson<List<SerializedUser>, ConcurrentDictionary<string, SerializedUser>>(
-                _log,
+            await _jsonService.LoadJson<List<SerializedUser>, ConcurrentDictionary<string, SerializedUser>>(
                 _whitelistPath,
                 n => new ConcurrentDictionary<string, SerializedUser>(n.ToDictionary(j => j.Id, j => j)),
                 verbatim);
@@ -183,7 +189,7 @@ public class BlacklistService : IBlacklistService
     {
         if (cont)
         {
-            RateLimiter.Timeout(() => _ = JsonUtils.SaveJson(_bannedIps, _bannedIpsPath), 2000);
+            _timeoutService.Timeout(() => _ = _jsonService.SaveJson(_bannedIps, _bannedIpsPath), 2000);
         }
     }
 
@@ -191,7 +197,7 @@ public class BlacklistService : IBlacklistService
     {
         if (cont)
         {
-            RateLimiter.Timeout(() => _ = JsonUtils.SaveJson(_blacklist.Values, _blacklistPath), 2000);
+            _timeoutService.Timeout(() => _ = _jsonService.SaveJson(_blacklist.Values, _blacklistPath), 2000);
         }
     }
 
@@ -199,7 +205,7 @@ public class BlacklistService : IBlacklistService
     {
         if (cont && _whitelist != null)
         {
-            RateLimiter.Timeout(() => _ = JsonUtils.SaveJson(_whitelist.Values, _whitelistPath), 2000);
+            _timeoutService.Timeout(() => _ = _jsonService.SaveJson(_whitelist.Values, _whitelistPath), 2000);
         }
     }
 }

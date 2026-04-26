@@ -2,9 +2,16 @@
 using Microsoft.Extensions.Logging;
 using Synapse.Server.Models;
 
-namespace Synapse.Server.Extras;
+namespace Synapse.Server.Services;
 
-public static class JsonUtils
+public interface IJsonService
+{
+    public Task<TResult?> LoadJson<TValue, TResult>(string path, Func<TValue, TResult> transform, bool verbatim);
+
+    public Task SaveJson<TSource>(TSource list, string path);
+}
+
+public class JsonService(ILogger<JsonService> log) : IJsonService
 {
     public static JsonSerializerOptions PrettySettings { get; } = new()
     {
@@ -21,11 +28,7 @@ public static class JsonUtils
         }
     };
 
-    public static async Task<TResult?> LoadJson<TValue, TResult>(
-        ILogger log,
-        string path,
-        Func<TValue, TResult> transform,
-        bool verbatim)
+    public async Task<TResult?> LoadJson<TValue, TResult>(string path, Func<TValue, TResult> transform, bool verbatim)
     {
         if (!File.Exists(path))
         {
@@ -49,9 +52,16 @@ public static class JsonUtils
         return default;
     }
 
-    public static async Task SaveJson<TSource>(TSource list, string path)
+    public async Task SaveJson<TSource>(TSource list, string path)
     {
-        await using StreamWriter output = new(path);
-        await JsonSerializer.SerializeAsync(output.BaseStream, list, PrettySettings);
+        try
+        {
+            await using StreamWriter output = new(path);
+            await JsonSerializer.SerializeAsync(output.BaseStream, list, PrettySettings);
+        }
+        catch (Exception ex)
+        {
+            log.LogError(ex, "Could not save [{Path}]", path);
+        }
     }
 }

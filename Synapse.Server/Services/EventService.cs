@@ -103,7 +103,7 @@ public class EventService : IEventService
     {
         Status status = GetStatus();
         string message =
-            JsonSerializer.Serialize(CurrentStage.AdjustStatus(status, client), JsonUtils.Settings);
+            JsonSerializer.Serialize(CurrentStage.AdjustStatus(status, client), JsonService.Settings);
         await client.Send(ClientOpcode.Status, message);
     }
 

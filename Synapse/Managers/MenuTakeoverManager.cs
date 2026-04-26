@@ -235,6 +235,7 @@ internal class MenuTakeoverManager : IDisposable, ITickable
         _bundleInfo = listing?.Takeover.Bundles.FirstOrDefault(b => b.GameVersion.MatchesGameVersion());
         if (_bundleInfo == null)
         {
+            _log.Debug("No valid takeover bundle for current game version");
             Reset();
             return;
         }

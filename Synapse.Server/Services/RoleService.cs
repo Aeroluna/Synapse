@@ -34,6 +34,8 @@ public class RoleService : IRoleService
 {
     private readonly string _adminsPath;
     private readonly ILogger<RoleService> _log;
+    private readonly ITimeoutService _timeoutService;
+    private readonly IJsonService _jsonService;
     private readonly ConcurrentDictionary<string, RoleData> _roleDatas = new();
 
     private readonly ConcurrentDictionary<string, Role> _roles = new();
@@ -42,9 +44,13 @@ public class RoleService : IRoleService
 
     public RoleService(
         ILogger<RoleService> log,
+        ITimeoutService timeoutService,
+        IJsonService jsonService,
         IDirectoryService directoryService)
     {
         _log = log;
+        _timeoutService = timeoutService;
+        _jsonService = jsonService;
         string currentDirectory = directoryService.ActiveDirectory;
         _rolesPath = Path.Combine(currentDirectory, "roles.json");
         _adminsPath = Path.Combine(currentDirectory, "admins.json");
@@ -76,8 +82,7 @@ public class RoleService : IRoleService
     public async Task LoadAdmins(bool verbatim)
     {
         ConcurrentDictionary<string, SerializedRoleUser>? admins =
-            await JsonUtils.LoadJson<List<SerializedRoleUser>, ConcurrentDictionary<string, SerializedRoleUser>>(
-                _log,
+            await _jsonService.LoadJson<List<SerializedRoleUser>, ConcurrentDictionary<string, SerializedRoleUser>>(
                 _adminsPath,
                 n => new ConcurrentDictionary<string, SerializedRoleUser>(n.ToDictionary(j => j.Id, j => j)),
                 verbatim);
@@ -89,7 +94,7 @@ public class RoleService : IRoleService
         _roleDatas.Clear();
         if (admins != null)
         {
-            foreach ((string? id, SerializedRoleUser? serializedRoleUser) in admins)
+            foreach ((string id, SerializedRoleUser serializedRoleUser) in admins)
             {
                 RoleData roleData = new(_log, id, serializedRoleUser.Username, _roles, serializedRoleUser.Roles);
                 _roleDatas.TryAdd(id, roleData);
@@ -100,8 +105,7 @@ public class RoleService : IRoleService
     public async Task LoadRoles(bool verbatim)
     {
         List<Role>? roles =
-            await JsonUtils.LoadJson<List<Role>, List<Role>>(
-                _log,
+            await _jsonService.LoadJson<List<Role>, List<Role>>(
                 _rolesPath,
                 n => n,
                 verbatim);
@@ -157,8 +161,8 @@ public class RoleService : IRoleService
     {
         if (cont)
         {
-            RateLimiter.Timeout(
-                () => _ = JsonUtils.SaveJson(
+            _timeoutService.Timeout(
+                () => _ = _jsonService.SaveJson(
                     _roleDatas.Values.Select(n => n.ToSerialized()),
                     _adminsPath),
                 2000);
@@ -169,7 +173,7 @@ public class RoleService : IRoleService
     {
         if (cont)
         {
-            RateLimiter.Timeout(() => _ = JsonUtils.SaveJson(_roles.Values, _rolesPath), 2000);
+            _timeoutService.Timeout(() => _ = _jsonService.SaveJson(_roles.Values, _rolesPath), 2000);
         }
     }
 

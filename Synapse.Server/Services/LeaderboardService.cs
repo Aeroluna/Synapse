@@ -41,6 +41,7 @@ public class LeaderboardService : ILeaderboardService
     private static readonly Random _random = new();
 
     private readonly ILogger<LeaderboardService> _log;
+    private readonly ITimeoutService _timeoutService;
     private readonly IMapService _mapService;
     private readonly IBackupService _backupService;
     private readonly IListenerService _listenerService;
@@ -55,6 +56,7 @@ public class LeaderboardService : ILeaderboardService
 
     public LeaderboardService(
         ILogger<LeaderboardService> log,
+        ITimeoutService timeoutService,
         IMapService mapService,
         IListenerService listenerService,
         ITournamentService tournamentService,
@@ -62,6 +64,7 @@ public class LeaderboardService : ILeaderboardService
         IListingService listingService)
     {
         _log = log;
+        _timeoutService = timeoutService;
         _mapService = mapService;
         _listenerService = listenerService;
         _tournamentService = tournamentService;
@@ -100,7 +103,7 @@ public class LeaderboardService : ILeaderboardService
 
     public void BroadcastLeaderboard(int index)
     {
-        RateLimiter.Timeout(
+        _timeoutService.Timeout(
             () => _listenerService.AllClients(n => n.Send(ClientOpcode.InvalidateScores, (byte)index)),
             4000);
     }
@@ -123,12 +126,11 @@ public class LeaderboardService : ILeaderboardService
         List<FakeClient> list = FakeClient.Fakes.ToList();
         //int count = _random.Next(list.Count / 4);
         //list.RemoveRange(_random.Next(list.Count - count), count);
-        list.ForEach(
-            n =>
-            {
-                int score = _random.Next(0, 9999999);
-                SubmitScore(n, n.Division, index, score, score / 9999999f);
-            });
+        list.ForEach(n =>
+        {
+            int score = _random.Next(0, 9999999);
+            SubmitScore(n, n.Division, index, score, score / 9999999f);
+        });
     }
 
     public void RemoveScore(int division, int index, SavedScore score)
@@ -187,19 +189,18 @@ public class LeaderboardService : ILeaderboardService
         ConcurrentList<ImmutableList<LeaderboardCell>?> divisionCache = cache[division];
         ImmutableList<LeaderboardCell> scores = divisionCache[index] ??= Enumerable
             .Range(0, Math.Min(12, mapSortedScores.Count))
-            .Select(
-                n =>
+            .Select(n =>
+            {
+                SavedScore score = mapSortedScores[n];
+                return new LeaderboardCell
                 {
-                    SavedScore score = mapSortedScores[n];
-                    return new LeaderboardCell
-                    {
-                        Rank = n,
-                        PlayerName = score.Username,
-                        Percentage = score.Percentage,
-                        Score = score.Score,
-                        Color = _tournamentService.GetColor(division, index, score.Id)
-                    };
-                })
+                    Rank = n,
+                    PlayerName = score.Username,
+                    Percentage = score.Percentage,
+                    Score = score.Score,
+                    Color = _tournamentService.GetColor(division, index, score.Id)
+                };
+            })
             .ToImmutableList();
 
         if (playerScoreIndex <= 11)
@@ -258,7 +259,12 @@ public class LeaderboardService : ILeaderboardService
 
     private void OnScoreSubmissionReceived(IClient client, ScoreSubmission scoreSubmission)
     {
-        SubmitScore(client, scoreSubmission.Division, scoreSubmission.Index, scoreSubmission.Score, scoreSubmission.Percentage);
+        SubmitScore(
+            client,
+            scoreSubmission.Division,
+            scoreSubmission.Index,
+            scoreSubmission.Score,
+            scoreSubmission.Percentage);
     }
 
     private async Task SendLeaderboard(IClient client, int index, int division, bool showEliminated)
@@ -291,7 +297,7 @@ public class LeaderboardService : ILeaderboardService
 
         await client.Send(
             ClientOpcode.LeaderboardScores,
-            JsonSerializer.Serialize(leaderboardScores, JsonUtils.Settings));
+            JsonSerializer.Serialize(leaderboardScores, JsonService.Settings));
     }
 
     private void SubmitScore(IClient client, int division, int index, int score, float percentage)
@@ -355,13 +361,14 @@ public class LeaderboardService : ILeaderboardService
                 _savedIds[division][index][id] = savedScore;
                 _sortedAllScores[division][index].InsertIntoSortedList(savedScore);
                 _cachedAllScores[division][index] = null;
-                if (!_tournamentService.IsEliminated(division, index, id) && !client.HasPermission(Permission.NoQualify))
+                if (!_tournamentService.IsEliminated(division, index, id) &&
+                    !client.HasPermission(Permission.NoQualify))
                 {
                     _sortedScores[division][index].InsertIntoSortedList(savedScore);
                     _cachedScores[division][index] = null;
                 }
 
-                RateLimiter.Timeout(
+                _timeoutService.Timeout(
                     () => _backupService.SaveScores(division, index, _sortedAllScores[division][index], null),
                     2000);
 
@@ -370,7 +377,7 @@ public class LeaderboardService : ILeaderboardService
         }
         catch (Exception e)
         {
-            _log.LogError(e, "Exception while submitting score for [{Client}]", client);
+            _log.LogCritical(e, "Exception while submitting score for [{Client}]", client);
         }
     }
 }

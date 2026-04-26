@@ -120,7 +120,7 @@ public class ConnectedClient(
             return;
         }
 
-        await Send(ClientOpcode.ChatMessage, JsonSerializer.Serialize(message, JsonUtils.Settings));
+        await Send(ClientOpcode.ChatMessage, JsonSerializer.Serialize(message, JsonService.Settings));
     }
 
     public async Task SendOpcode(ClientOpcode opcode)
@@ -154,7 +154,7 @@ public class ConnectedClient(
                     "yellow",
                     MessageType.PrioritySystem,
                     NamedFormatter.Format(message, args)),
-                JsonUtils.Settings));
+                JsonService.Settings));
     }
 
     public async Task SendServerMessage(string message, params object?[] args)
@@ -168,7 +168,7 @@ public class ConnectedClient(
                     "yellow",
                     MessageType.System,
                     NamedFormatter.Format(message, args)),
-                JsonUtils.Settings));
+                JsonService.Settings));
     }
 
     public async Task Send(ClientOpcode opcode, string value)
@@ -407,7 +407,7 @@ public class ConnectedClient(
                         string scoreSubmission = reader.ReadString();
                         ScoreSubmission? score = JsonSerializer.Deserialize<ScoreSubmission>(
                             scoreSubmission,
-                            JsonUtils.Settings);
+                            JsonService.Settings);
                         if (score != null)
                         {
                             ScoreSubmissionReceived?.Invoke(this, score);
