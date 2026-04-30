@@ -5,14 +5,14 @@
     <OutputType>Library</OutputType>
     <LangVersion>latest</LangVersion>
     <Nullable>enable</Nullable>
-    <Configurations>Debug-1.29.1;Release-1.29.1;Debug-1.34.2;Release-1.34.2;Debug-1.37.1;Release-1.37.1;Debug-1.39.1;Release-1.39.1;Debug-1.40.8;Release-1.40.8</Configurations>
+    <Configurations>Debug-1.29.1;Release-1.29.1;Debug-1.34.2;Release-1.34.2;Debug-1.37.1;Release-1.37.1;Debug-1.40.8;Release-1.40.8;Debug-1.42.1;Release-1.42.1</Configurations>
   </PropertyGroup>
 
   <PropertyGroup>
     <PluginId>Synapse</PluginId>
     <PluginName>Synapse</PluginName>
     <Author>Aeroluna</Author>
-    <Version>1.1.13</Version>
+    <Version>1.1.14</Version>
     <Description>Connect with other players for live events with chatting, leaderboards, and synchronized play.</Description>
   </PropertyGroup>
   <ItemGroup>
@@ -27,6 +27,7 @@
   <ItemGroup>
     <Reference Include="0Harmony" HintPath="$(BeatSaberDir)\Libs\0Harmony.dll"/>
     <Reference Include="BeatmapCore" HintPath="$(BeatSaberDir)\Beat Saber_Data\Managed\BeatmapCore.dll"/>
+    <Reference Include="BeatSaber.Multiplayer.Core" HintPath="$(BeatSaberDir)\Beat Saber_Data\Managed\BeatSaber.Multiplayer.Core.dll"/>
     <Reference Include="BeatSaber.ViewSystem" HintPath="$(BeatSaberDir)\Beat Saber_Data\Managed\BeatSaber.ViewSystem.dll" Publicize="true"/>
     <Reference Include="BeatSaberMarkupLanguage" HintPath="$(BeatSaberDir)\Plugins\BSML.dll"/>
     <Reference Include="BGLib.AppFlow" HintPath="$(BeatSaberDir)\Beat Saber_Data\Managed\BGLib.AppFlow.dll"/>
@@ -45,6 +46,7 @@
     <Reference Include="IPA.Loader" HintPath="$(BeatSaberDir)\Beat Saber_Data\Managed\IPA.Loader.dll"/>
     <Reference Include="Main" HintPath="$(BeatSaberDir)\Beat Saber_Data\Managed\Main.dll" Publicize="true"/>
     <Reference Include="MediaLoader" HintPath="$(BeatSaberDir)\Beat Saber_Data\Managed\MediaLoader.dll"/>
+    <Reference Include="OculusStudios.Platform.Core" HintPath="$(BeatSaberDir)\Beat Saber_Data\Managed\OculusStudios.Platform.Core.dll" />
     <Reference Include="Networking" HintPath="$(BeatSaberDir)\Beat Saber_Data\Managed\Networking.dll"/>
     <Reference Include="Newtonsoft.Json" HintPath="$(BeatSaberDir)\Libs\Newtonsoft.Json.dll"/>
     <Reference Include="PlatformUserModel" HintPath="$(BeatSaberDir)\Beat Saber_Data\Managed\PlatformUserModel.dll"/>

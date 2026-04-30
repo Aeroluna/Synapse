@@ -11,6 +11,9 @@ using SiraUtil.Logging;
 using Synapse.Extras;
 using Synapse.Networking;
 using Synapse.Networking.Models;
+#if LATEST
+using OculusStudios.Platform.Core;
+#endif
 
 namespace Synapse.Managers;
 
@@ -31,7 +34,11 @@ internal class NetworkManager : IDisposable
     private readonly Config _config;
     private readonly ListingManager _listingManager;
     private readonly SiraLog _log;
+#if LATEST
+    private readonly IPlatform _platformUserModel;
+#else
     private readonly IPlatformUserModel _platformUserModel;
+#endif
 
     private readonly List<byte[]> _queuedPackets = [];
     private readonly Task<AuthenticationToken?> _tokenTask;
@@ -44,7 +51,11 @@ internal class NetworkManager : IDisposable
     private NetworkManager(
         SiraLog log,
         Config config,
+#if LATEST
+        IPlatform platformUserModel,
+#else
         IPlatformUserModel platformUserModel,
+#endif
         ListingManager listingManager)
     {
         _log = log;
@@ -229,6 +240,18 @@ internal class NetworkManager : IDisposable
 
     private async Task<AuthenticationToken?> GetToken()
     {
+#if LATEST
+        UserInfo.Platform platform = _platformUserModel.key switch
+        {
+            "steam" => UserInfo.Platform.Steam,
+            "oculus" => UserInfo.Platform.Oculus,
+            _ => UserInfo.Platform.Test
+        };
+        UserInfo userInfo = new(
+            platform,
+            _platformUserModel.user.userId.ToString(),
+            _platformUserModel.user.displayName);
+#else
 #if !V1_29_1
         UserInfo? userInfo = await _platformUserModel.GetUserInfo(CancellationToken.None);
 #else
@@ -238,6 +261,7 @@ internal class NetworkManager : IDisposable
         {
             return null;
         }
+#endif
 
         PlatformAuthenticationTokenProvider provider = new(_platformUserModel, userInfo);
         return await provider.GetAuthenticationToken();

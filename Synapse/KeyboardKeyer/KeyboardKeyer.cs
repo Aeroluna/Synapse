@@ -1,6 +1,9 @@
 ﻿using System;
 using IPA.Utilities;
 using UnityEngine;
+#if LATEST
+using HMUI;
+#endif
 
 namespace Synapse.KeyboardKeyer;
 
@@ -42,9 +45,15 @@ internal class KeyboardKeyer : MonoBehaviour
             caps = !caps;
         }
 
+#if LATEST
+        if (caps != _keyboard.shouldCapitalize)
+        {
+            _keyboard._capsLockState = caps ? CapsLockState.Uppercase : CapsLockState.Lowercase;
+#else
         if (caps != _keyboard._shouldCapitalize)
         {
             _keyboard._shouldCapitalize = caps;
+#endif
             _keyboard.SetKeyboardCapitalization(caps);
         }
 

@@ -234,8 +234,10 @@ internal class LevelStartManager : IDisposable
 #if !PRE_V1_37_1
         BeatmapKey beatmapKey = downloadedMap.BeatmapKeys[division];
         BeatmapLevel beatmapLevel = downloadedMap.BeatmapLevel;
+#if !LATEST
         ColorScheme? beatmapOverrideColorScheme =
             beatmapLevel.GetColorScheme(beatmapKey.beatmapCharacteristic, beatmapKey.difficulty);
+#endif
 #elif !V1_29_1
         ColorScheme? beatmapOverrideColorScheme = null;
         if (downloadedMap is { BeatmapLevel: CustomBeatmapLevel customBeatmapLevel } &&
@@ -261,10 +263,10 @@ internal class LevelStartManager : IDisposable
 #endif
             null, // no environment override
             overrideColorScheme,
-#if LATEST
+#if !PRE_V1_40_8
             _gameplaySetupViewController.colorSchemesSettings.ShouldOverrideLightshowColors(),
 #endif
-#if !V1_29_1
+#if !V1_29_1 && !LATEST
             beatmapOverrideColorScheme,
 #endif
             modifiers,
@@ -273,18 +275,29 @@ internal class LevelStartManager : IDisposable
 #if !PRE_V1_37_1
             _environmentsListModel,
 #endif
+#if LATEST
+            new GameplayAdditionalInformation(string.Empty),
+            null,
+            null,
+#else
             string.Empty, // doesnt matter, gets reset by animation anyways
             false,
             false,
             null,
-#if !PRE_V1_37_1
-            null,
+#endif
+#if !PRE_V1_37_1 && !LATEST
+            Action<DiContainer>? afterSceneSwitchCallback,
 #endif
             callback,
 #if !V1_29_1
             null,
+#if LATEST
+            null,
 #endif
             null);
+#else
+            null);
+#endif
     }
 
     private static Action<string>? GetNextLevelIsIsolated()
@@ -331,10 +344,10 @@ internal class LevelStartManager : IDisposable
 #endif
         OverrideEnvironmentSettings? overrideEnvironmentSettings,
         ColorScheme? overrideColorScheme,
-#if LATEST
+#if !PRE_V1_40_8
         bool playerOverrideLightshowColors,
 #endif
-#if !V1_29_1
+#if !V1_29_1 && !LATEST
         ColorScheme? beatmapOverrideColorScheme,
 #endif
         GameplayModifiers gameplayModifiers,
@@ -343,16 +356,25 @@ internal class LevelStartManager : IDisposable
 #if !PRE_V1_37_1
         EnvironmentsListModel environmentsListModel,
 #endif
+#if LATEST
+        GameplayAdditionalInformation gameplayAdditionalInformation,
+        Action? beforeSceneSwitchToGameplayCallback,
+        Action<DiContainer>? afterSceneSwitchToGameplayCallback,
+#else
         string backButtonText,
         bool useTestNoteCutSoundEffects,
         bool startPaused,
         Action? beforeSceneSwitchCallback,
-#if !PRE_V1_37_1
+#endif
+#if !PRE_V1_37_1 && !LATEST
         Action<DiContainer>? afterSceneSwitchCallback,
 #endif
         Action<StandardLevelScenesTransitionSetupDataSO, LevelCompletionResults>? levelFinishedCallback,
 #if !V1_29_1
         Action<LevelScenesTransitionSetupDataSO, LevelCompletionResults>? levelRestartedCallback,
+#if LATEST
+        IBeatmapLevelData? beatmapLevelData,
+#endif
         RecordingToolManager.SetupData? recordingToolData)
 #else
         Action<LevelScenesTransitionSetupDataSO, LevelCompletionResults>? levelRestartedCallback)
@@ -371,10 +393,10 @@ internal class LevelStartManager : IDisposable
 #endif
                 overrideEnvironmentSettings,
                 overrideColorScheme,
-#if LATEST
+#if !PRE_V1_40_8
                 playerOverrideLightshowColors,
 #endif
-#if !V1_29_1
+#if !V1_29_1 && !LATEST
                 beatmapOverrideColorScheme,
 #endif
                 gameplayModifiers,
@@ -383,16 +405,25 @@ internal class LevelStartManager : IDisposable
 #if !PRE_V1_37_1
                 environmentsListModel,
 #endif
+#if LATEST
+                gameplayAdditionalInformation,
+                beforeSceneSwitchToGameplayCallback,
+                afterSceneSwitchToGameplayCallback,
+#else
                 backButtonText,
                 useTestNoteCutSoundEffects,
                 startPaused,
                 beforeSceneSwitchCallback,
-#if !PRE_V1_37_1
+#endif
+#if !PRE_V1_37_1 && !LATEST
                 afterSceneSwitchCallback,
 #endif
                 levelFinishedCallback,
 #if !V1_29_1
                 levelRestartedCallback,
+#if LATEST
+                beatmapLevelData,
+#endif
                 recordingToolData);
 #else
                 levelRestartedCallback);
@@ -411,10 +442,10 @@ internal class LevelStartManager : IDisposable
 #endif
                 overrideEnvironmentSettings,
                 overrideColorScheme,
-#if LATEST
+#if !PRE_V1_40_8
                 playerOverrideLightshowColors,
 #endif
-#if !V1_29_1
+#if !V1_29_1 && !LATEST
                 beatmapOverrideColorScheme,
 #endif
                 gameplayModifiers,
@@ -423,16 +454,25 @@ internal class LevelStartManager : IDisposable
 #if !PRE_V1_37_1
                 environmentsListModel,
 #endif
+#if LATEST
+                gameplayAdditionalInformation,
+                beforeSceneSwitchToGameplayCallback,
+                afterSceneSwitchToGameplayCallback,
+#else
                 backButtonText,
                 useTestNoteCutSoundEffects,
                 startPaused,
                 beforeSceneSwitchCallback,
-#if !PRE_V1_37_1
+#endif
+#if !PRE_V1_37_1 && !LATEST
                 afterSceneSwitchCallback,
 #endif
                 levelFinishedCallback,
 #if !V1_29_1
                 levelRestartedCallback,
+#if LATEST
+                beatmapLevelData,
+#endif
                 recordingToolData);
 #else
                 levelRestartedCallback);
