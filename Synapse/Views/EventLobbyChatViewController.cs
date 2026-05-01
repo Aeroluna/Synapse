@@ -189,7 +189,7 @@ internal class EventLobbyChatViewController : BSMLAutomaticViewController
 
             _input.gameObject.AddComponent<LayoutElement>().minHeight = 10;
 
-#if PRE_V1_39_1
+#if PRE_V1_40_8
             ImageView priorityBg = (ImageView)_priorityBg.background;
 #else
             ImageView priorityBg = (ImageView)_priorityBg.Background;
@@ -226,7 +226,7 @@ internal class EventLobbyChatViewController : BSMLAutomaticViewController
                 DivisionChoices = [0];
             }
 
-#if !PRE_V1_39_1
+#if !PRE_V1_40_8
             _divisionSetting.Values = DivisionChoices;
 #else
             _divisionSetting.values = DivisionChoices;

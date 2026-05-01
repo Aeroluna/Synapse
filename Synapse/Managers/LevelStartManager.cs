@@ -286,18 +286,16 @@ internal class LevelStartManager : IDisposable
             null,
 #endif
 #if !PRE_V1_37_1 && !LATEST
-            Action<DiContainer>? afterSceneSwitchCallback,
+            null,
 #endif
             callback,
 #if !V1_29_1
             null,
+#endif
 #if LATEST
             null,
 #endif
             null);
-#else
-            null);
-#endif
     }
 
     private static Action<string>? GetNextLevelIsIsolated()
